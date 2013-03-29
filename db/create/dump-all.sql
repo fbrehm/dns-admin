@@ -21,6 +21,8 @@ DROP TABLE public.da_rr_types;
 DROP SEQUENCE public.seq_rr_type_id;
 DROP FUNCTION public.rr_type_id_trigger();
 DROP FUNCTION public.get_da_dbmodel_version();
+DROP FUNCTION public.da_dbmodel_version();
+DROP TYPE public.type_dns_class;
 DROP COLLATION public.german;
 DROP COLLATION public.british;
 DROP COLLATION public.american;
@@ -114,6 +116,36 @@ CREATE COLLATION german (lc_collate = 'de_DE.utf8', lc_ctype = 'de_DE.utf8');
 
 
 ALTER COLLATION public.german OWNER TO dns;
+
+--
+-- Name: type_dns_class; Type: TYPE; Schema: public; Owner: dns
+--
+
+CREATE TYPE type_dns_class AS ENUM (
+    'IN',
+    'CH',
+    'HS'
+);
+
+
+ALTER TYPE public.type_dns_class OWNER TO dns;
+
+--
+-- Name: da_dbmodel_version(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION da_dbmodel_version() RETURNS character varying
+    LANGUAGE plpython2u SECURITY DEFINER COST 1
+    AS $$
+    rec = plpy.execute("SELECT version FROM da_version ORDER BY id ASC", 1)
+    if len(rec) < 1:
+        raise plpy.SPIError('No version string found.')
+    vc_version = rec[0]['version']
+    return vc_version
+$$;
+
+
+ALTER FUNCTION public.da_dbmodel_version() OWNER TO postgres;
 
 --
 -- Name: get_da_dbmodel_version(); Type: FUNCTION; Schema: public; Owner: dns
