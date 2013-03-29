@@ -33,6 +33,20 @@ $$;
 ALTER FUNCTION public.get_da_dbmodel_version() OWNER TO dns;
 
 --
+-- Name: da_dbmodel_version(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+CREATE FUNCTION da_dbmodel_version() RETURNS character varying
+    LANGUAGE plpython2u SECURITY DEFINER COST 1
+    AS $$
+    rec = plpy.execute("SELECT version FROM da_version ORDER BY id ASC", 1)
+    if len(rec) < 1:
+        raise plpy.SPIError('No version string found.')
+    vc_version = rec[0]['version']
+    return vc_version
+$$;
+ALTER FUNCTION public.da_dbmodel_version() OWNER TO postgres;
+
+--
 -- Name: da_version; Type: TABLE; Schema: public; Owner: dns; Tablespace: 
 --
 CREATE TABLE da_version (
