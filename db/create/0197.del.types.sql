@@ -10,6 +10,9 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
+\echo Droping type type_std_address ...
+DROP TYPE public.type_std_address;
+
 \echo Droping type type_dns_class ...
 DROP TYPE public.type_dns_class;
 

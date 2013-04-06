@@ -21,4 +21,21 @@ CREATE TYPE type_dns_class AS ENUM (
 );
 ALTER TYPE public.type_dns_class OWNER TO dns;
 
+COMMENT ON TYPE type_dns_class IS 'All usable DNS classes - ''IN'' for ''internet'', ''CH'' for ''chaos'' and ''HS'' for ''hesiod''.';
+
+
+--
+-- Name: type_std_address; Type: TYPE; Schema: public; Owner: dns
+--
+CREATE TYPE type_std_address AS ENUM (
+    'any',
+    'none',
+    'localhost',
+    'localnets'
+);
+ALTER TYPE public.type_std_address OWNER TO dns;
+
+COMMENT ON TYPE type_std_address IS 'A standard address usable in address lists.';
+
+
 -- vim: ts=8 noet fileencoding=utf-8

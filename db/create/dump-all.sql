@@ -10,19 +10,41 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
+ALTER TABLE ONLY public.da_addr_lists DROP CONSTRAINT fk_addr_list_name_server_id;
+ALTER TABLE ONLY public.da_acls DROP CONSTRAINT fk_addr_list;
 DROP TRIGGER rr_type_id_trigger ON public.da_rr_types;
 DROP INDEX public.uix_version;
 DROP INDEX public.uix_rr_type_name;
+DROP INDEX public.da_name_servers_name_server_name_idx;
+DROP INDEX public.da_name_servers_name_server_id_idx;
+ALTER TABLE ONLY public.da_name_servers DROP CONSTRAINT uniq_name_server_name;
+ALTER TABLE ONLY public.da_acls DROP CONSTRAINT uniq_acl_name;
 ALTER TABLE ONLY public.da_rr_types DROP CONSTRAINT pk_rr_types;
+ALTER TABLE ONLY public.da_name_servers DROP CONSTRAINT pk_name_servers;
 ALTER TABLE ONLY public.da_version DROP CONSTRAINT pk_da_version;
+ALTER TABLE ONLY public.da_acls DROP CONSTRAINT pk_acl;
+ALTER TABLE ONLY public.da_addr_lists DROP CONSTRAINT da_adddr_lists_pkey;
+ALTER TABLE public.da_name_servers ALTER COLUMN name_server_id DROP DEFAULT;
+ALTER TABLE public.da_addr_lists ALTER COLUMN addr_list_id DROP DEFAULT;
+ALTER TABLE public.da_acls ALTER COLUMN acl_id DROP DEFAULT;
+DROP VIEW public.v_name_servers;
 DROP VIEW public.v_all_rr_types;
+DROP SEQUENCE public.seq_addr_list_elem_id;
 DROP TABLE public.da_version;
 DROP TABLE public.da_rr_types;
 DROP SEQUENCE public.seq_rr_type_id;
+DROP SEQUENCE public.da_name_servers_name_server_id_seq;
+DROP TABLE public.da_name_servers;
+DROP SEQUENCE public.da_adddr_lists_addr_list_id_seq;
+DROP TABLE public.da_addr_lists;
+DROP SEQUENCE public.da_acls_acl_id_seq;
+DROP TABLE public.da_acls;
 DROP FUNCTION public.rr_type_id_trigger();
 DROP FUNCTION public.get_da_dbmodel_version();
 DROP FUNCTION public.da_dbmodel_version();
+DROP TYPE public.type_std_address;
 DROP TYPE public.type_dns_class;
+DROP TYPE public.type_addr_list_element;
 DROP COLLATION public.german;
 DROP COLLATION public.british;
 DROP COLLATION public.american;
@@ -118,6 +140,20 @@ CREATE COLLATION german (lc_collate = 'de_DE.utf8', lc_ctype = 'de_DE.utf8');
 ALTER COLLATION public.german OWNER TO dns;
 
 --
+-- Name: type_addr_list_element; Type: TYPE; Schema: public; Owner: dns
+--
+
+CREATE TYPE type_addr_list_element AS (
+	address inet,
+	key_id text,
+	acl_name text,
+	address_list_id bigint
+);
+
+
+ALTER TYPE public.type_addr_list_element OWNER TO dns;
+
+--
 -- Name: type_dns_class; Type: TYPE; Schema: public; Owner: dns
 --
 
@@ -129,6 +165,34 @@ CREATE TYPE type_dns_class AS ENUM (
 
 
 ALTER TYPE public.type_dns_class OWNER TO dns;
+
+--
+-- Name: TYPE type_dns_class; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON TYPE type_dns_class IS 'All usable DNS classes - ''IN'' for ''internet'', ''CH'' for ''chaos'' and ''HS'' for ''hesiod''.';
+
+
+--
+-- Name: type_std_address; Type: TYPE; Schema: public; Owner: dns
+--
+
+CREATE TYPE type_std_address AS ENUM (
+    'any',
+    'none',
+    'localhost',
+    'localnets'
+);
+
+
+ALTER TYPE public.type_std_address OWNER TO dns;
+
+--
+-- Name: TYPE type_std_address; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON TYPE type_std_address IS 'A standard address usable in address lists.';
+
 
 --
 -- Name: da_dbmodel_version(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -195,6 +259,245 @@ $$;
 
 ALTER FUNCTION public.rr_type_id_trigger() OWNER TO dns;
 
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: da_acls; Type: TABLE; Schema: public; Owner: dns; Tablespace: 
+--
+
+CREATE TABLE da_acls (
+    acl_id integer NOT NULL,
+    name_server_id integer NOT NULL,
+    acl_name character varying(250) NOT NULL,
+    addr_list_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.da_acls OWNER TO dns;
+
+--
+-- Name: TABLE da_acls; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON TABLE da_acls IS 'All seperate defined ACLs of a nameserver.';
+
+
+--
+-- Name: COLUMN da_acls.acl_id; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_acls.acl_id IS 'The unique ACL Id.';
+
+
+--
+-- Name: COLUMN da_acls.name_server_id; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_acls.name_server_id IS 'Link to da_name_servers.';
+
+
+--
+-- Name: COLUMN da_acls.acl_name; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_acls.acl_name IS 'The name of the ACL (must be unique inside a name server).';
+
+
+--
+-- Name: COLUMN da_acls.addr_list_id; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_acls.addr_list_id IS 'Link to da_addr_lists';
+
+
+--
+-- Name: da_acls_acl_id_seq; Type: SEQUENCE; Schema: public; Owner: dns
+--
+
+CREATE SEQUENCE da_acls_acl_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.da_acls_acl_id_seq OWNER TO dns;
+
+--
+-- Name: da_acls_acl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dns
+--
+
+ALTER SEQUENCE da_acls_acl_id_seq OWNED BY da_acls.acl_id;
+
+
+--
+-- Name: da_addr_lists; Type: TABLE; Schema: public; Owner: dns; Tablespace: 
+--
+
+CREATE TABLE da_addr_lists (
+    addr_list_id bigint NOT NULL,
+    name_server_id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.da_addr_lists OWNER TO dns;
+
+--
+-- Name: TABLE da_addr_lists; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON TABLE da_addr_lists IS 'All address lists, used for ACLs, view and zone definitions, global options a.s.o.';
+
+
+--
+-- Name: COLUMN da_addr_lists.name_server_id; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_addr_lists.name_server_id IS 'Link to da_name_servers';
+
+
+--
+-- Name: COLUMN da_addr_lists.description; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_addr_lists.description IS 'A possible description of this address list.';
+
+
+--
+-- Name: da_adddr_lists_addr_list_id_seq; Type: SEQUENCE; Schema: public; Owner: dns
+--
+
+CREATE SEQUENCE da_adddr_lists_addr_list_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.da_adddr_lists_addr_list_id_seq OWNER TO dns;
+
+--
+-- Name: da_adddr_lists_addr_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dns
+--
+
+ALTER SEQUENCE da_adddr_lists_addr_list_id_seq OWNED BY da_addr_lists.addr_list_id;
+
+
+--
+-- Name: da_name_servers; Type: TABLE; Schema: public; Owner: dns; Tablespace: 
+--
+
+CREATE TABLE da_name_servers (
+    name_server_id integer NOT NULL,
+    name_server_name character varying(250) NOT NULL,
+    enabled boolean DEFAULT false NOT NULL,
+    admin_user character varying(250) DEFAULT 'root'::character varying NOT NULL,
+    mgmt_address inet NOT NULL,
+    description text,
+    config_dir character varying(250) DEFAULT '/etc/bind'::character varying NOT NULL,
+    bind_dir character varying(250) DEFAULT '/var/bind'::character varying NOT NULL,
+    ns_fqdn character varying(250) NOT NULL
+);
+
+
+ALTER TABLE public.da_name_servers OWNER TO dns;
+
+--
+-- Name: TABLE da_name_servers; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON TABLE da_name_servers IS 'All administrated name servers';
+
+
+--
+-- Name: COLUMN da_name_servers.name_server_id; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.name_server_id IS 'The unique name server ID.';
+
+
+--
+-- Name: COLUMN da_name_servers.name_server_name; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.name_server_name IS 'The unique name of the name server';
+
+
+--
+-- Name: COLUMN da_name_servers.enabled; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.enabled IS 'Is this name server enabled for administration.';
+
+
+--
+-- Name: COLUMN da_name_servers.admin_user; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.admin_user IS 'The administration user used for administration via SSH';
+
+
+--
+-- Name: COLUMN da_name_servers.mgmt_address; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.mgmt_address IS 'The IP address to use to connect to via SSH for administartion purposes (an address, because, if DNS is broken, names are not usable).';
+
+
+--
+-- Name: COLUMN da_name_servers.description; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.description IS 'Some kind of description of this name server.';
+
+
+--
+-- Name: COLUMN da_name_servers.config_dir; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.config_dir IS 'The directory on the name server containing the name.conf and similar files (used by SSH administration).';
+
+
+--
+-- Name: COLUMN da_name_servers.bind_dir; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.bind_dir IS 'The directory on the name server containing zone files, journals a.s.o.';
+
+
+--
+-- Name: COLUMN da_name_servers.ns_fqdn; Type: COMMENT; Schema: public; Owner: dns
+--
+
+COMMENT ON COLUMN da_name_servers.ns_fqdn IS 'The Full Qualified Domain (a.k.a. Host) Name of the name server. Not to use for management purposes.';
+
+
+--
+-- Name: da_name_servers_name_server_id_seq; Type: SEQUENCE; Schema: public; Owner: dns
+--
+
+CREATE SEQUENCE da_name_servers_name_server_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.da_name_servers_name_server_id_seq OWNER TO dns;
+
+--
+-- Name: da_name_servers_name_server_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dns
+--
+
+ALTER SEQUENCE da_name_servers_name_server_id_seq OWNED BY da_name_servers.name_server_id;
+
+
 --
 -- Name: seq_rr_type_id; Type: SEQUENCE; Schema: public; Owner: dns
 --
@@ -208,10 +511,6 @@ CREATE SEQUENCE seq_rr_type_id
 
 
 ALTER TABLE public.seq_rr_type_id OWNER TO dns;
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
 
 --
 -- Name: da_rr_types; Type: TABLE; Schema: public; Owner: dns; Tablespace: 
@@ -320,6 +619,20 @@ COMMENT ON COLUMN da_version.version IS 'The underlaying version string of the d
 
 
 --
+-- Name: seq_addr_list_elem_id; Type: SEQUENCE; Schema: public; Owner: dns
+--
+
+CREATE SEQUENCE seq_addr_list_elem_id
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seq_addr_list_elem_id OWNER TO dns;
+
+--
 -- Name: v_all_rr_types; Type: VIEW; Schema: public; Owner: dns
 --
 
@@ -328,6 +641,83 @@ CREATE VIEW v_all_rr_types AS
 
 
 ALTER TABLE public.v_all_rr_types OWNER TO dns;
+
+--
+-- Name: v_name_servers; Type: VIEW; Schema: public; Owner: dns
+--
+
+CREATE VIEW v_name_servers AS
+    SELECT da_name_servers.name_server_id, da_name_servers.name_server_name, da_name_servers.ns_fqdn, da_name_servers.enabled, da_name_servers.config_dir, da_name_servers.bind_dir, da_name_servers.admin_user, da_name_servers.mgmt_address, da_name_servers.description FROM da_name_servers ORDER BY da_name_servers.name_server_name;
+
+
+ALTER TABLE public.v_name_servers OWNER TO dns;
+
+--
+-- Name: acl_id; Type: DEFAULT; Schema: public; Owner: dns
+--
+
+ALTER TABLE ONLY da_acls ALTER COLUMN acl_id SET DEFAULT nextval('da_acls_acl_id_seq'::regclass);
+
+
+--
+-- Name: addr_list_id; Type: DEFAULT; Schema: public; Owner: dns
+--
+
+ALTER TABLE ONLY da_addr_lists ALTER COLUMN addr_list_id SET DEFAULT nextval('da_adddr_lists_addr_list_id_seq'::regclass);
+
+
+--
+-- Name: name_server_id; Type: DEFAULT; Schema: public; Owner: dns
+--
+
+ALTER TABLE ONLY da_name_servers ALTER COLUMN name_server_id SET DEFAULT nextval('da_name_servers_name_server_id_seq'::regclass);
+
+
+--
+-- Data for Name: da_acls; Type: TABLE DATA; Schema: public; Owner: dns
+--
+
+COPY da_acls (acl_id, name_server_id, acl_name, addr_list_id) FROM stdin;
+\.
+
+
+--
+-- Name: da_acls_acl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dns
+--
+
+SELECT pg_catalog.setval('da_acls_acl_id_seq', 1, false);
+
+
+--
+-- Name: da_adddr_lists_addr_list_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dns
+--
+
+SELECT pg_catalog.setval('da_adddr_lists_addr_list_id_seq', 1, false);
+
+
+--
+-- Data for Name: da_addr_lists; Type: TABLE DATA; Schema: public; Owner: dns
+--
+
+COPY da_addr_lists (addr_list_id, name_server_id, description) FROM stdin;
+\.
+
+
+--
+-- Data for Name: da_name_servers; Type: TABLE DATA; Schema: public; Owner: dns
+--
+
+COPY da_name_servers (name_server_id, name_server_name, enabled, admin_user, mgmt_address, description, config_dir, bind_dir, ns_fqdn) FROM stdin;
+1	helga	t	root	85.214.134.152	My strato iron ..	/etc/bind	/var/bind	helga.brehm-online.com
+\.
+
+
+--
+-- Name: da_name_servers_name_server_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dns
+--
+
+SELECT pg_catalog.setval('da_name_servers_name_server_id_seq', 1, true);
+
 
 --
 -- Data for Name: da_rr_types; Type: TABLE DATA; Schema: public; Owner: dns
@@ -395,10 +785,33 @@ COPY da_version (id, version) FROM stdin;
 
 
 --
+-- Name: seq_addr_list_elem_id; Type: SEQUENCE SET; Schema: public; Owner: dns
+--
+
+SELECT pg_catalog.setval('seq_addr_list_elem_id', 1, false);
+
+
+--
 -- Name: seq_rr_type_id; Type: SEQUENCE SET; Schema: public; Owner: dns
 --
 
 SELECT pg_catalog.setval('seq_rr_type_id', 49, true);
+
+
+--
+-- Name: da_adddr_lists_pkey; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
+--
+
+ALTER TABLE ONLY da_addr_lists
+    ADD CONSTRAINT da_adddr_lists_pkey PRIMARY KEY (addr_list_id);
+
+
+--
+-- Name: pk_acl; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
+--
+
+ALTER TABLE ONLY da_acls
+    ADD CONSTRAINT pk_acl PRIMARY KEY (acl_id);
 
 
 --
@@ -410,11 +823,49 @@ ALTER TABLE ONLY da_version
 
 
 --
+-- Name: pk_name_servers; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
+--
+
+ALTER TABLE ONLY da_name_servers
+    ADD CONSTRAINT pk_name_servers PRIMARY KEY (name_server_id);
+
+
+--
 -- Name: pk_rr_types; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
 --
 
 ALTER TABLE ONLY da_rr_types
     ADD CONSTRAINT pk_rr_types PRIMARY KEY (rr_type_id);
+
+
+--
+-- Name: uniq_acl_name; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
+--
+
+ALTER TABLE ONLY da_acls
+    ADD CONSTRAINT uniq_acl_name UNIQUE (name_server_id, acl_name);
+
+
+--
+-- Name: uniq_name_server_name; Type: CONSTRAINT; Schema: public; Owner: dns; Tablespace: 
+--
+
+ALTER TABLE ONLY da_name_servers
+    ADD CONSTRAINT uniq_name_server_name UNIQUE (name_server_name);
+
+
+--
+-- Name: da_name_servers_name_server_id_idx; Type: INDEX; Schema: public; Owner: dns; Tablespace: 
+--
+
+CREATE INDEX da_name_servers_name_server_id_idx ON da_name_servers USING btree (name_server_id);
+
+
+--
+-- Name: da_name_servers_name_server_name_idx; Type: INDEX; Schema: public; Owner: dns; Tablespace: 
+--
+
+CREATE UNIQUE INDEX da_name_servers_name_server_name_idx ON da_name_servers USING btree (name_server_name);
 
 
 --
@@ -436,6 +887,22 @@ CREATE UNIQUE INDEX uix_version ON da_version USING btree (version);
 --
 
 CREATE TRIGGER rr_type_id_trigger BEFORE INSERT OR UPDATE ON da_rr_types FOR EACH ROW EXECUTE PROCEDURE rr_type_id_trigger();
+
+
+--
+-- Name: fk_addr_list; Type: FK CONSTRAINT; Schema: public; Owner: dns
+--
+
+ALTER TABLE ONLY da_acls
+    ADD CONSTRAINT fk_addr_list FOREIGN KEY (addr_list_id) REFERENCES da_addr_lists(addr_list_id);
+
+
+--
+-- Name: fk_addr_list_name_server_id; Type: FK CONSTRAINT; Schema: public; Owner: dns
+--
+
+ALTER TABLE ONLY da_addr_lists
+    ADD CONSTRAINT fk_addr_list_name_server_id FOREIGN KEY (name_server_id) REFERENCES da_name_servers(name_server_id);
 
 
 --
