@@ -42,10 +42,6 @@ __license__ = dns_admin.__license__
 
 app = DnsAdminApp(appname = appname)
 
-#print "%s: %s %s" % (appname, _('version'), __version__)
-#print ""
-#print "  %s: %s (%s)" % (_('Author'), __author__, __copyright__)
-
 if app.verbose > 2:
     print (_("DNS-Admin-Application object:") + "\n%s") % (app)
 

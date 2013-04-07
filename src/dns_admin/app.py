@@ -185,6 +185,67 @@ class DnsAdminApp(PbCfgApp):
         self._simulate = getattr(self.args, 'simulate', False)
 
     #--------------------------------------------------------------------------
+    def init_cfg_spec(self):
+        """
+        Method to complete the initialisation of the config
+        specification file. It adds some specific configuration options
+        for the DNS admin application.
+
+        """
+
+        default_db_host = 'localhost'
+        default_db_port = 5432
+        default_db_schema = 'dns'
+        default_db_user = 'dnsadmin'
+
+        if not u'db' in self.cfg_spec:
+            self.cfg_spec[u'db'] = {}
+            self.cfg_spec.comments[u'db'].append('')
+            self.cfg_spec.comments[u'db'].append('')
+            self.cfg_spec.comments[u'db'].append(
+                    u'Configuration parameters for the database connection')
+            self.cfg_spec.comments[u'db'].append(
+                    u'NOTE: the database password is not included in ' +
+                    u'the configuration.')
+            self.cfg_spec.comments[u'db'].append(
+                    u'If a password is needed, then it should be ' +
+                    u'included in a .pgpass file.')
+
+        db_host_spec = u"string(default = '%s')" % (
+                to_unicode_or_bust(default_db_host))
+        if not u'host' in self.cfg_spec[u'db']:
+            self.cfg_spec[u'db'][u'host'] = db_host_spec
+            self.cfg_spec[u'db'].comments[u'host'].append('')
+            self.cfg_spec[u'db'].comments[u'host'].append(
+                    u'The hostname or IP address of the PostgreSQL ' +
+                    u'database server')
+
+        if not u'port' in self.cfg_spec[u'db']:
+            self.cfg_spec[u'db'][u'port'] = (u'integer(min = 1, ' +
+                    u'max = %d, default = %d)') % ((2**15 - 1), default_db_port)
+            self.cfg_spec[u'db'].comments[u'port'].append('')
+            self.cfg_spec[u'db'].comments[u'port'].append(
+                    u'The TCP port number of the PostgreSQL database server')
+
+        spec = u"string(default = '%s')" % (
+                to_unicode_or_bust(default_db_schema))
+        if not u'schema' in self.cfg_spec[u'db']:
+            self.cfg_spec[u'db'][u'schema'] = spec
+            self.cfg_spec[u'db'].comments[u'schema'].append('')
+            self.cfg_spec[u'db'].comments[u'schema'].append(
+                    u'The DNS database schema of the PostgreSQL ' +
+                    u'database server')
+
+        spec = u"string(default = '%s')" % (
+                to_unicode_or_bust(default_db_user))
+        if not u'user' in self.cfg_spec[u'db']:
+            self.cfg_spec[u'db'][u'user'] = spec
+            self.cfg_spec[u'db'].comments[u'user'].append('')
+            self.cfg_spec[u'db'].comments[u'user'].append(
+                    u'The DNS database user of the PostgreSQL ' +
+                    u'database server')
+
+    #--------------------------------------------------------------------------
     def _init_commands(self):
 
         self.cmds = []
