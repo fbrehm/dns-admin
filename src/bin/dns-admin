@@ -17,8 +17,22 @@ import logging
 # Own modules
 import dns_admin
 
+from pb_base.common import pp
+
+from pb_base.errors import PbError
+
+from dns_admin.errors import DnsAdminError
+from dns_admin.errors import DnsAdminAppError
+
+from dns_admin.app import DnsAdminApp
+
+from dns_admin.translate import translator
+
 appname = os.path.basename(sys.argv[0])
 log = logging.getLogger(appname)
+
+_ = translator.lgettext
+__ = translator.lngettext
 
 __author__ = dns_admin.__author__
 __copyright__ = dns_admin.__copyright__
@@ -26,10 +40,18 @@ __contact__ = dns_admin.__contact__
 __version__ = dns_admin.__version__
 __license__ = dns_admin.__license__
 
-print "%s: version %s" % (appname, __version__)
-print ""
-print "  Author: %s (%s)" % (__author__, __copyright__)
+app = DnsAdminApp(appname = appname)
 
+#print "%s: %s %s" % (appname, _('version'), __version__)
+#print ""
+#print "  %s: %s (%s)" % (_('Author'), __author__, __copyright__)
+
+if app.verbose > 2:
+    print (_("DNS-Admin-Application object:") + "\n%s") % (app)
+
+app()
+
+sys.exit(0)
 
 #==============================================================================
 # vim: fileencoding=utf-8 filetype=python ts=4
