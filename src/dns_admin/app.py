@@ -104,7 +104,7 @@ class DnsAdminApp(PbCfgApp):
                 description = desc,
                 cfg_dir = 'dns-admin',
                 cfg_stem = 'dns-admin',
-                hide_default_config = False,
+                hide_default_config = True,
                 need_config_file = False,
         )
 
@@ -252,10 +252,10 @@ class DnsAdminApp(PbCfgApp):
         self.cmd = {}
 
         # version
-        self.cmds.append('version')
-        self.cmd['version'] = {}
-        self.cmd['version']['argparse'] = self._init_args_version
-        self.cmd['version']['handler'] = self._handle_version
+        self.cmds.append('info')
+        self.cmd['info'] = {}
+        self.cmd['info']['argparse'] = self._init_args_info
+        self.cmd['info']['handler'] = self._handle_info
 
     #--------------------------------------------------------------------------
     def _run(self):
@@ -270,24 +270,54 @@ class DnsAdminApp(PbCfgApp):
         log.debug("Ending ...")
 
     #--------------------------------------------------------------------------
-    def _init_args_version(self):
+    def _init_args_info(self):
 
+        indent = ' ' * self.usage_term_len
         opts_str = _("general options")
+        info_cmd_str = _('info command')
 
-        usage = "%s [%s] version [-d]\n" % (self.appname, opts_str)
-        usage += "       %s version -h|--help" % (self.appname)
-        msg = _('Shows the version of the %s application and the database model.') % (
+        usage = "%s [%s] info <%s>\n" % (self.appname, opts_str, info_cmd_str)
+        usage += indent + "%s info -h|--help" % (self.appname)
+        msg = _('Shows some informations about the %s application.') % (
                 self.appname)
 
-        parser_version = self._cmd_subparsers.add_parser(
-                'version',
+        parser_info = self._cmd_subparsers.add_parser(
+                'info',
                 help = msg,
                 description = msg,
                 usage = usage,
         )
 
+        info_help = _("The information, you want to see.")
+        info_help += " " + _("Possible values:")
+        info_help += " version: " + _("shows version informations about the " +
+                "application and the database model;")
+        info_help += " default_config: " + _("display a generated default " +
+                "configuration file;")
+        info_help += " cfg_files: " + _("displays all possible standard " +
+                "configuration files;")
+
+        parser_info.add_argument(
+                'info_cmd',
+                nargs = '?',
+                default = 'version',
+                choices = ['version', 'default_config', 'cfg_files'],
+                help = info_help,
+        )
+
     #--------------------------------------------------------------------------
-    def _handle_version(self):
+    def _handle_info(self):
+
+        if self.args.info_cmd == 'default_config':
+            self.show_default_config()
+            sys.exit(0)
+
+        if self.args.info_cmd == 'cfg_files':
+            sys.stdout.write(_("Used default configuration files:") + "\n")
+            for cfg_file in self.cfg_files:
+                sys.stdout.write("    %r\n" % (cfg_file))
+            sys.stdout.write("\n")
+            sys.exit(0)
 
         sys.stdout.write(_("Version of %s: %s\n\n") % (self.appname, self.version))
 

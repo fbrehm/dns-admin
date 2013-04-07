@@ -55,7 +55,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     requires = [
-        'pb_base (>= 0.4.5)',
+        'pb_base (>= 0.4.6)',
         'pb_dbhandler (>= 0.4.2)',
         'psycopg2',
     ]

@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Frank Brehm <frank.brehm@profitbricks.com>
 Build-Depends: debhelper (>= 7.0.50~), python-epydoc, python-docutils,
  python-support, texlive-latex-base, texlive-latex-extra, python-argparse, ghostscript,
- profitbricks-python-logging (>= 0.3.0-1), profitbricks-python-base (>= 0.4.3-1),
+ profitbricks-python-logging (>= 0.3.0-1), profitbricks-python-base (>= 0.4.6-1),
  profitbricks-python-dbhandler (>= 0.4.2-1), python-psycopg2, python-iniparse
 Standards-Version: 3.8.4
 Vcs-Git: https://github.com/fbrehm/dns-admin.git
@@ -14,7 +14,7 @@ Package: dns-admin
 Architecture: all
 Depends: ${misc:Depends}, python, python-support, python-argparse,
  profitbricks-python-logging (>= 0.3.0-1), coreutils, sudo, psmisc,
- profitbricks-python-base (>= 0.4.3-1), python-psycopg2, python-iniparse,
+ profitbricks-python-base (>= 0.4.6-1), python-psycopg2, python-iniparse,
  profitbricks-python-dbhandler (>= 0.4.2-1)
 Description: Database related DNS administration tool
 
