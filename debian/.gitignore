@@ -1,0 +1,6 @@
+*.debhelper
+*.log
+*.substvars
+files
+dns-admin
+dns-admin-doc

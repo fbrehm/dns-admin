@@ -1,0 +1,6 @@
+dns-admin (0.1.0-1) unstable; urgency=low
+
+  * Initial
+  * Created debian infrastructure
+
+ -- Frank Brehm <frank@brehm-online.com>  Sun, 07 Apr 2013 13:46:13 +0200
