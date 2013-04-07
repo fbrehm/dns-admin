@@ -1,3 +1,9 @@
+dns-admin (0.1.1-1) unstable; urgency=low
+
+  * Added increase-version.sh
+
+ -- Frank Brehm <frank@brehm-online.com>  Sun, 07 Apr 2013 14:57:13 +0200
+
 dns-admin (0.1.0-1) unstable; urgency=low
 
   * Initial
