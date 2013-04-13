@@ -54,7 +54,7 @@ from dns_admin.translate import translator
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.2.1'
+__version__ = '0.3.1'
 
 log = logging.getLogger(__name__)
 
@@ -207,6 +207,28 @@ class DnsAdminHandler(BaseDbHandler):
         res['log_dir'] = self.log_dir
 
         return res
+
+    #--------------------------------------------------------------------------
+    def get_dbmodel_version(self):
+        """
+        Retrieves the current database model version from table 'da_version'
+
+        @return: the current database model version
+        @rtype: str
+
+        """
+
+        if not self.connected:
+            self.connect()
+        if not self.cursor_opened:
+            self.open_cursor()
+
+        sql = 'SELECT * FROM da_dbmodel_version()'
+        log.debug("excecuting SQL: %r", self.cursor.mogrify(sql))
+        self.cursor.execute(sql)
+        row = self.cursor.fetchone()
+
+        return row[0]
 
 #==============================================================================
 class PortArgparseAction(argparse.Action):

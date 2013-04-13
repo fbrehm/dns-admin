@@ -46,7 +46,7 @@ from dns_admin.handler import init_db_argparser
 
 from dns_admin.translate import translator
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 _ = translator.lgettext
 __ = translator.lngettext
@@ -457,7 +457,9 @@ class DnsAdminApp(PbCfgApp):
             sys.stdout.write("\n")
             sys.exit(0)
 
-        sys.stdout.write(_("Version of %s: %s\n\n") % (self.appname, self.version))
+        sys.stdout.write(_("Version of %s: %s\n") % (self.appname, self.version))
+        db_version = self.handler.get_dbmodel_version()
+        sys.stdout.write(_("Version of database model: %s\n\n") % (db_version))
 
 #==============================================================================
 
