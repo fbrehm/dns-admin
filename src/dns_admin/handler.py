@@ -54,7 +54,7 @@ from dns_admin.translate import translator
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 log = logging.getLogger(__name__)
 
@@ -79,6 +79,9 @@ class DnsAdminHandler(BaseDbHandler):
             db_schema = 'dns',
             db_user = 'dnsadmin',
             db_passwd = None,
+            config_dir = default_config_dir,
+            bind_dir = default_bind_dir,
+            log_dir = default_log_dir,
             connect_params = None,
             auto_connect = False,
             simulate = False,
@@ -106,6 +109,12 @@ class DnsAdminHandler(BaseDbHandler):
         @type db_user: str
         @param db_passwd: the password of the database user connecting to DB.
         @type db_passwd: str
+        @param config_dir: the BIND configuration directory
+        @type config_dir: str
+        @param bind_dir: the BIND data directory
+        @type bind_dir: str
+        @param log_dir: the logging directory of BIND
+        @type log_dir: str
         @param connect_params: additional connect parameters for connecting
                                to database
         @type connect_params: dict
@@ -137,6 +146,67 @@ class DnsAdminHandler(BaseDbHandler):
         @return: None
 
         """
+
+        super(DnsAdminHandler, self).__init__(
+                db_host = db_host,
+                db_port = db_port,
+                db_schema = db_schema,
+                db_user = db_user,
+                db_passwd = db_passwd,
+                connect_params = connect_params,
+                auto_connect = auto_connect,
+                simulate = simulate,
+                pgpass_file = pgpass_file,
+                appname = appname,
+                verbose = verbose,
+                base_dir = base_dir,
+                use_stderr = use_stderr,
+                sudo = sudo,
+                quiet = quiet,
+        )
+        self.initialized = False
+
+        self._config_dir = config_dir
+        self._bind_dir = bind_dir
+        self._log_dir = log_dir
+        self.initialized = True
+
+    #--------------------------------------------------------------------------
+    @property
+    def config_dir(self):
+        """The BIND configuration directory."""
+        return self._config_dir
+
+    #--------------------------------------------------------------------------
+    @property
+    def bind_dir(self):
+        """The BIND data directory."""
+        return self._bind_dir
+
+    #--------------------------------------------------------------------------
+    @property
+    def log_dir(self):
+        """The logging directory of BIND."""
+        return self._bind_dir
+
+    #--------------------------------------------------------------------------
+    def as_dict(self, short = False):
+        """
+        Transforms the elements of the object into a dict
+
+        @param short: don't include local properties in resulting dict.
+        @type short: bool
+
+        @return: structure as dict
+        @rtype:  dict
+        """
+
+        res = super(DnsAdminHandler, self).as_dict(short = short)
+        res['config_dir'] = self.config_dir
+        res['bind_dir'] = self.bind_dir
+        res['log_dir'] = self.log_dir
+
+        return res
 
 #==============================================================================
 class PortArgparseAction(argparse.Action):

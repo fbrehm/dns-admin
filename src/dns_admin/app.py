@@ -15,7 +15,7 @@ import logging
 # Third party modules
 
 # Own modules
-from pb_base.common import pp, to_unicode_or_bust
+from pb_base.common import pp, to_unicode_or_bust, to_utf8_or_bust
 
 from pb_base.errors import PbError
 from pb_base.errors import FunctionNotImplementedError
@@ -32,6 +32,10 @@ import dns_admin
 from dns_admin import default_config_dir
 from dns_admin import default_bind_dir
 from dns_admin import default_log_dir
+from dns_admin import default_db_host
+from dns_admin import default_db_port
+from dns_admin import default_db_schema
+from dns_admin import default_db_user
 
 from dns_admin.errors import DnsAdminError
 from dns_admin.errors import DnsAdminAppError
@@ -42,7 +46,7 @@ from dns_admin.handler import init_db_argparser
 
 from dns_admin.translate import translator
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 _ = translator.lgettext
 __ = translator.lngettext
@@ -123,6 +127,7 @@ class DnsAdminApp(PbCfgApp):
         )
 
         self.post_init()
+        self._init_handler_object()
         self.initialized = True
 
     #--------------------------------------------------------------------------
@@ -156,6 +161,24 @@ class DnsAdminApp(PbCfgApp):
         if verbose > 1:
             log.info(_("Destroying %s application object."), self.appname)
 
+    #--------------------------------------------------------------------------
+    def as_dict(self, short = False):
+        """
+        Transforms the elements of the object into a dict
+
+        @param short: don't include local properties in resulting dict.
+        @type short: bool
+
+        @return: structure as dict
+        @rtype:  dict
+        """
+
+        res = super(DnsAdminApp, self).as_dict(short = short)
+        res['command'] = self.command
+        res['simulate'] = self.simulate
+        res['timeout'] = self.timeout
+
+        return res
 
     #--------------------------------------------------------------------------
     def init_arg_parser(self):
@@ -170,6 +193,22 @@ class DnsAdminApp(PbCfgApp):
                 action = "store_true",
                 dest = "simulate",
                 help = _("Simulation mode, nothing is really done."),
+        )
+
+        self.arg_parser.add_argument(
+                '--config-dir',
+                action = "store",
+                dest = "config_dir",
+                help = (_("BIND configuration directory (Default: %r)") % (
+                        default_config_dir)),
+        )
+
+        self.arg_parser.add_argument(
+                '--bind-dir',
+                action = "store",
+                dest = "bind_dir",
+                help = (_("BIND data directory (Default: %r)") % (
+                        default_bind_dir)),
         )
 
         init_db_argparser(self.arg_parser)
@@ -272,6 +311,89 @@ class DnsAdminApp(PbCfgApp):
         self.cmd['info'] = {}
         self.cmd['info']['argparse'] = self._init_args_info
         self.cmd['info']['handler'] = self._handle_info
+
+    #--------------------------------------------------------------------------
+    def _init_handler_object(self):
+
+        config_dir = default_config_dir
+        bind_dir = default_bind_dir
+        log_dir = default_log_dir
+
+        db_host = default_db_host
+        db_port = default_db_host
+        db_schema = default_db_schema
+        db_user = default_db_user
+        db_passwd = None
+
+        if self.args.config_dir:
+            config_dir = self.args.config_dir
+        if self.args.bind_dir:
+            bind_dir = self.args.bind_dir
+
+        if u'db' in self.cfg:
+
+            db_cfg = self.cfg[u'db']
+
+            if u'host' in db_cfg:
+                db_host = to_utf8_or_bust(db_cfg[u'host'])
+
+            if u'port' in db_cfg:
+                db_port = db_cfg[u'port']
+
+            if u'schema' in db_cfg:
+                db_schema = to_utf8_or_bust(db_cfg[u'schema'])
+
+            if u'user' in db_cfg:
+                db_user = to_utf8_or_bust(db_cfg[u'user'])
+
+        if self.args.db_host:
+            db_host = self.args.db_host
+
+        if self.args.db_port:
+            db_port = self.args.db_port
+
+        if self.args.db_schema:
+            db_schema = self.args.db_schema
+
+        if self.args.db_user:
+            db_user = self.args.db_user
+
+        if self.args.db_password is not None:
+            db_passwd = self.args.db_password
+
+        sudo = False
+        if os.geteuid():
+            sudo = True
+
+        if self.verbose > 2:
+            args = {
+                'config_dir': config_dir,
+                'bind_dir': bind_dir,
+                'log_dir': log_dir,
+                'db_host': db_host,
+                'db_port': db_port,
+                'db_schema': db_schema,
+                'db_user':  db_user,
+                'db_passwd': db_passwd,
+            }
+            log.debug("Init args for handler:\n%s", pp(args))
+
+        self.handler = DnsAdminHandler(
+                db_host = db_host,
+                db_port = db_port,
+                db_schema = db_schema,
+                db_user = db_user,
+                db_passwd = db_passwd,
+                config_dir = config_dir,
+                bind_dir = bind_dir,
+                log_dir = log_dir,
+                auto_connect = False,
+                simulate = self.simulate,
+                appname = self.appname,
+                verbose = self.verbose,
+                base_dir = self.base_dir,
+                sudo = sudo,
+        )
 
     #--------------------------------------------------------------------------
     def _run(self):
