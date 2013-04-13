@@ -1,3 +1,11 @@
+dns-admin (0.1.2-1) unstable; urgency=low
+
+  * Added src/dns_admin/app.py
+  * Added src/dns_admin/handler.py
+  * Added command line parameters for database access.
+
+ -- Frank Brehm <frank@brehm-online.com>  Sat, 13 Apr 2013 18:06:08 +0200
+
 dns-admin (0.1.1-1) unstable; urgency=low
 
   * Added increase-version.sh
