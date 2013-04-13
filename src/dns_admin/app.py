@@ -93,6 +93,12 @@ class DnsAdminApp(PbCfgApp):
         @type: ArgumentParser
         """
 
+        self.handler = None
+        """
+        @ivar: The underlaying handler object.
+        @type: DnsAdminHandler
+        """
+
         self._init_commands()
 
         super(DnsAdminApp, self).__init__(
