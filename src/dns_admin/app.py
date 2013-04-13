@@ -29,12 +29,20 @@ from pb_base.cfg_app import PbCfgApp
 
 import dns_admin
 
+from dns_admin import default_config_dir
+from dns_admin import default_bind_dir
+from dns_admin import default_log_dir
+
 from dns_admin.errors import DnsAdminError
 from dns_admin.errors import DnsAdminAppError
 
+from dns_admin.handler import DnsAdminHandlerError
+from dns_admin.handler import DnsAdminHandler
+from dns_admin.handler import init_db_argparser
+
 from dns_admin.translate import translator
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 _ = translator.lgettext
 __ = translator.lngettext
@@ -163,6 +171,8 @@ class DnsAdminApp(PbCfgApp):
                 dest = "simulate",
                 help = _("Simulation mode, nothing is really done."),
         )
+
+        init_db_argparser(self.arg_parser)
 
         self._cmd_subparsers = self.arg_parser.add_subparsers(
                 dest = 'command',

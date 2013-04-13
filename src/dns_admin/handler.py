@@ -18,6 +18,7 @@ import re
 import logging
 
 # Third party modules
+import argparse
 
 # Own modules
 from pb_base.common import pp, to_unicode_or_bust, to_utf8_or_bust
@@ -37,6 +38,14 @@ from pb_dbhandler.handler import BaseDbHandler
 
 import dns_admin
 
+from dns_admin import default_config_dir
+from dns_admin import default_bind_dir
+from dns_admin import default_log_dir
+from dns_admin import default_db_host
+from dns_admin import default_db_port
+from dns_admin import default_db_schema
+from dns_admin import default_db_user
+
 from dns_admin.errors import DnsAdminError
 from dns_admin.errors import DnsAdminAppError
 
@@ -45,7 +54,7 @@ from dns_admin.translate import translator
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +138,80 @@ class DnsAdminHandler(BaseDbHandler):
 
         """
 
+#==============================================================================
+class PortArgparseAction(argparse.Action):
 
+    def __call__(self, parser, namespace, values, option_string = None):
+
+        port = int(values)
+
+        if port < 1:
+            raise argparse.ArgumentError(self,
+                    _("The port number of a PostgreSQL database must be greater than zero."))
+        max_port = 2**15 - 1
+        if port > max_port:
+            raise argparse.ArgumentError(self,
+                    (_("The port number of a PostgreSQL database must be less or equal %d.") % (max_port)))
+
+        setattr(namespace, self.dest, port)
+
+#==============================================================================
+def init_db_argparser(parser):
+    """
+    Init of the typical database options with the given argument parser.
+
+    @param parser: the argument parser object, where to add the database
+                   arguments
+    @type parser: argparse.ArgumentParser
+
+    """
+
+    db_group = parser.add_argument_group(_('Database options'))
+
+    db_group.add_argument(
+            '--db-host', '-H',
+            action = "store",
+            dest = 'db_host',
+            metavar = 'HOST',
+            help = (_("The host of the PostgreSQL database (Default: %r).") % (
+                    default_db_host)),
+    )
+
+    db_group.add_argument(
+            '--db-port', '-P',
+            action = PortArgparseAction,
+            dest = 'db_port',
+            type = int,
+            metavar = 'PORT',
+            help = (_("The TCP port of PostgreSQL database on the database machine (Default: %d).") % (
+                    default_db_port)),
+    )
+
+    db_group.add_argument(
+            '--db-schema', '-S',
+            action = "store",
+            dest = 'db_schema',
+            metavar = 'SCHEMA',
+            help = (_("The database schema (database) used on DB host (Default: %r).") % (
+                default_db_schema)),
+    )
+
+    db_group.add_argument(
+            '--db-user', '-U',
+            action = "store",
+            dest = 'db_user',
+            metavar = 'USER',
+            help = (_("The database user using for connecting to DB (Default: %r).") % (
+                    default_db_user)),
+    )
+
+    db_group.add_argument(
+            '--db-password',
+            action = "store",
+            dest = 'db_password',
+            metavar = 'PASSWORD',
+            help = _("The password of the database user connecting to DB (Not recommended, better to use an entry in the $HOME/.pgpass file)."),
+    )
 
 #==============================================================================
 
