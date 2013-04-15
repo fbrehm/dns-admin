@@ -27,6 +27,8 @@ from pb_base.app import PbApplicationError
 from pb_base.cfg_app import PbCfgAppError
 from pb_base.cfg_app import PbCfgApp
 
+from pb_dbhandler.helper import init_db_argparser
+
 import dns_admin
 
 from dns_admin import default_config_dir
@@ -42,7 +44,6 @@ from dns_admin.errors import DnsAdminAppError
 
 from dns_admin.handler import DnsAdminHandlerError
 from dns_admin.handler import DnsAdminHandler
-from dns_admin.handler import init_db_argparser
 
 from dns_admin.translate import translator
 
