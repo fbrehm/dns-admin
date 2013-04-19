@@ -16,7 +16,7 @@ from dns_admin.translate import translator
 from pb_base.errors import PbError
 from pb_base.cfg_app import PbCfgAppError
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 _ = translator.lgettext
 __ = translator.lngettext
@@ -36,6 +36,30 @@ class DnsAdminAppError(DnsAdminError, PbCfgAppError):
     """
 
     pass
+
+#==============================================================================
+class DnsDbObjectError(DnsAdminError):
+    """
+    Special exception class for exceptions happend in methods of
+    database encapsulation classes.
+    """
+    pass
+
+#==============================================================================
+class NullEntityValue(DnsDbObjectError):
+    """
+    Special Exception for entity propertie, which don't may be None.
+    """
+
+	#--------------------------------------------------------------------------
+    def __init__(self, entity_name, cls):
+        self.entity_name = entity_name
+        self.cls = cls
+
+	#--------------------------------------------------------------------------
+    def __str__(self):
+        return _("Property %(ent)r of class %(cls)s may not be None.") % {
+                'ent': self.entity_name, 'cls': self.cls}
 
 #==============================================================================
 
