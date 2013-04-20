@@ -29,6 +29,7 @@ from pb_base.errors import PbReadTimeoutError, CallAbstractMethodError
 from pb_dbhandler import BaseDbError
 
 from pb_dbhandler.handler import BaseDbHandlerError
+from pb_dbhandler.handler import BaseDbHandler
 
 from dns_admin.errors import DnsAdminError
 from dns_admin.errors import DnsAdminHandlerError
@@ -40,7 +41,7 @@ from dns_admin.translate import translator
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 #==============================================================================
 class NameServer(PbBaseObject):
@@ -114,7 +115,7 @@ class NameServer(PbBaseObject):
         @return: None
         """
 
-        super(Nameserver, self).__init__(
+        super(NameServer, self).__init__(
                 appname = appname,
                 verbose = verbose,
                 version = version,
@@ -124,34 +125,34 @@ class NameServer(PbBaseObject):
         )
 
         if ns_id is None:
-            raise NullEntityValue('Nameserver', 'ns_id')
+            raise NullEntityValue('NameServer', 'ns_id')
         self._ns_id = int(ns_id)
 
         if ns_name is None:
-            raise NullEntityValue('Nameserver', 'ns_name')
+            raise NullEntityValue('NameServer', 'ns_name')
         self._ns_name = str(ns_name)
 
         if fqdn is None:
-            raise NullEntityValue('Nameserver', 'fqdn')
+            raise NullEntityValue('NameServer', 'fqdn')
         self._fqdn = str(fqdn)
 
         if admin_user is None:
-            raise NullEntityValue('Nameserver', 'admin_user')
+            raise NullEntityValue('NameServer', 'admin_user')
         self._admin_user = str(admin_user)
 
         if mgmt_address is None:
-            raise NullEntityValue('Nameserver', 'mgmt_address')
+            raise NullEntityValue('NameServer', 'mgmt_address')
         if isinstance(mgmt_address, IP):
             self._mgmt_address = mgmt_address
         else:
             self._mgmt_address = IP(mgmt_address)
 
         if config_dir is None:
-            raise NullEntityValue('Nameserver', 'config_dir')
+            raise NullEntityValue('NameServer', 'config_dir')
         self._config_dir = str(config_dir)
 
         if bind_dir is None:
-            raise NullEntityValue('Nameserver', 'bind_dir')
+            raise NullEntityValue('NameServer', 'bind_dir')
         self._bind_dir = str(bind_dir)
 
         self._enabled = to_bool(enabled)
@@ -255,7 +256,7 @@ class NameServer(PbBaseObject):
         @rtype:  dict
         """
 
-        res = super(Nameserver, self).as_dict(short = short)
+        res = super(NameServer, self).as_dict(short = short)
         res['id'] = self.id
         res['name'] = self.name
         res['fqdn'] = self.fqdn
@@ -267,6 +268,101 @@ class NameServer(PbBaseObject):
         res['description'] = self.description
 
         return res
+
+#==============================================================================
+class NameServerTable(PbBaseObject):
+    """
+    Encapsulation object for the nameserver table.
+    """
+
+    _table_name = 'da_name_servers'
+    """
+    @cvar: a class variable for the table of the entity
+    @type: str
+    """
+
+	#--------------------------------------------------------------------------
+    def __init__(self,
+            handler,
+            appname = None,
+            verbose = 0,
+            version = __version__,
+            base_dir = None,
+            use_stderr = False,
+            initialized = False,
+            ):
+        """
+        Initialisation of the nameserver table object.
+
+        @raise DnsDbObjectError: on a uncoverable error.
+
+        @param handler: a reference to a valid database handler object
+        @type handler: DnsAdminHandler
+        @param appname: name of the current running application
+        @type appname: str
+        @param verbose: verbose level
+        @type verbose: int
+        @param version: the version string of the current object or application
+        @type version: str
+        @param base_dir: the base directory of all operations
+        @type base_dir: str
+        @param use_stderr: a flag indicating, that on handle_error() the output
+                           should go to STDERR, even if logging has
+                           initialized logging handlers.
+        @type use_stderr: bool
+        @param initialized: initialisation is complete after __init__()
+                            of this object
+        @type initialized: bool
+
+        @return: None
+        """
+
+        super(NameServerTable, self).__init__(
+                appname = appname,
+                verbose = verbose,
+                version = version,
+                base_dir = base_dir,
+                use_stderr = use_stderr,
+                initialized = False,
+        )
+
+        if not isinstance(handler, BaseDbHandler):
+            raise DnsDbObjectError(_("Handler object is not a instance of a BaseDbHandler class") +
+                ': %r' % (handler))
+        self._handler = handler
+
+        self.initialized = True
+
+    #--------------------------------------------------------------------------
+    @property
+    def table_name(self):
+        """The used database table name."""
+        return self._table_name
+
+    #--------------------------------------------------------------------------
+    @property
+    def handler(self):
+        """A reference to a valid database handler object."""
+        return self._handler
+
+    #--------------------------------------------------------------------------
+    def as_dict(self, short = False):
+        """
+        Transforms the elements of the object into a dict
+
+        @param short: don't include local properties in resulting dict.
+        @type short: bool
+
+        @return: structure as dict
+        @rtype:  dict
+        """
+
+        res = super(NameServerTable, self).as_dict(short = short)
+        res['table_name'] = self.table_name
+        res['handler'] = _("instance of <%s>") % (self.handler.__class__.__name__)
+
+        return res
+
 
 #==============================================================================
 
