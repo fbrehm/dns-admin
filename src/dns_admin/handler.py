@@ -33,7 +33,6 @@ from pb_base.handler import CommandNotFoundError
 from pb_dbhandler.pgpass import PgPassFileError
 from pb_dbhandler.pgpass import PgPassFileNotExistsError
 
-from pb_dbhandler.handler import BaseDbHandlerError
 from pb_dbhandler.handler import BaseDbHandler
 
 import dns_admin
@@ -48,23 +47,20 @@ from dns_admin import default_db_user
 
 from dns_admin.errors import DnsAdminError
 from dns_admin.errors import DnsAdminAppError
+from dns_admin.errors import DnsAdminHandlerError
+from dns_admin.errors import DnsDbObjectError
+
+import dns_admin.db.ns
+from dns_admin.db.ns import NameServer
 
 from dns_admin.translate import translator
 
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 log = logging.getLogger(__name__)
-
-#==============================================================================
-class DnsAdminHandlerError(BaseDbHandlerError, DnsAdminError):
-    """
-    Base error class
-    """
-
-    pass
 
 #==============================================================================
 class DnsAdminHandler(BaseDbHandler):

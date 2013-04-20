@@ -16,7 +16,9 @@ from dns_admin.translate import translator
 from pb_base.errors import PbError
 from pb_base.cfg_app import PbCfgAppError
 
-__version__ = '0.2.0'
+from pb_dbhandler.handler import BaseDbHandlerError
+
+__version__ = '0.3.0'
 
 _ = translator.lgettext
 __ = translator.lngettext
@@ -33,6 +35,14 @@ class DnsAdminError(PbError):
 class DnsAdminAppError(DnsAdminError, PbCfgAppError):
     """
     Base class of all exceptions in DnsAdminApp and DnsDbAdminApp class.
+    """
+
+    pass
+
+#==============================================================================
+class DnsAdminHandlerError(BaseDbHandlerError, DnsAdminError):
+    """
+    Base error class
     """
 
     pass

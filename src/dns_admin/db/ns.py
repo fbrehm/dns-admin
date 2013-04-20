@@ -31,20 +31,19 @@ from pb_dbhandler import BaseDbError
 from pb_dbhandler.handler import BaseDbHandlerError
 
 from dns_admin.errors import DnsAdminError
+from dns_admin.errors import DnsAdminHandlerError
 from dns_admin.errors import DnsDbObjectError
 from dns_admin.errors import NullEntityValue
-
-from dns_admin.handler import DnsAdminHandlerError
 
 from dns_admin.translate import translator
 
 _ = translator.lgettext
 __ = translator.lngettext
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 #==============================================================================
-class Nameserver(PbBaseObject):
+class NameServer(PbBaseObject):
     """
     Encapsulation object for one particular nameserver.
     """
@@ -243,6 +242,31 @@ class Nameserver(PbBaseObject):
     def description(self):
         """Some kind of description of this name server."""
         return self._description
+
+    #--------------------------------------------------------------------------
+    def as_dict(self, short = False):
+        """
+        Transforms the elements of the object into a dict
+
+        @param short: don't include local properties in resulting dict.
+        @type short: bool
+
+        @return: structure as dict
+        @rtype:  dict
+        """
+
+        res = super(Nameserver, self).as_dict(short = short)
+        res['id'] = self.id
+        res['name'] = self.name
+        res['fqdn'] = self.fqdn
+        res['admin_user'] = self.admin_user
+        res['address'] = self.address
+        res['config_dir'] = self.config_dir
+        res['bind_dir'] = self.bind_dir
+        res['enabled'] = self.enabled
+        res['description'] = self.description
+
+        return res
 
 #==============================================================================
 
